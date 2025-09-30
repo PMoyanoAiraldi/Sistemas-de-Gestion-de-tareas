@@ -3,6 +3,18 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  rol?: string;
+  iat: number;
+  exp: number;
+}
+
+interface RequestWithUser extends Request {
+  user?: JwtPayload;
+}
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -13,7 +25,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(
     context: ExecutionContext,
   ): Promise<boolean>{
-    const request: Request = context.switchToHttp().getRequest() 
+    const request: Request = context.switchToHttp().getRequest<RequestWithUser>() 
     const token = this.extractTokenFromHeader(request)
 
     if(!token){
@@ -21,14 +33,27 @@ export class AuthGuard implements CanActivate {
     }
 
     try{
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('JWT_SECRET') 
+
+      const secret = this.configService.get<string>('JWT_SECRET');
+      
+      if (!secret) {
+        throw new Error('JWT_SECRET no configurado');
+      }
+
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: secret 
       });
       
-      request['user'] = payload
-      payload.iat = new Date(payload.iat * 1000)
-      payload.exp = new Date(payload.exp * 1000)
-      console.log('Payload', payload) 
+      request.user = {
+        ...payload,
+        iat: payload.iat,
+        exp: payload.exp
+      };
+      console.log('Payload', {
+        ...payload,
+        iat: new Date(payload.iat * 1000),
+        exp: new Date(payload.exp * 1000)
+      });
     }catch{
       throw new UnauthorizedException('Token invalido')
     }

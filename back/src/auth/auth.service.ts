@@ -1,21 +1,62 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
-import { UsuariosService } from "src/usuario/usuario.service";
+import { ForbiddenException, HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import { LoginUsuarioDto } from "./dto/login-usuario.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Usuario } from "src/usuario/usuario.entity";
+import { Repository } from "typeorm";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from 'bcrypt';
 
 
 @Injectable()
-export class AuthService{
-    constructor(private readonly usuariosService: UsuariosService ){}
+export class AuthService {
+    constructor(
+        @InjectRepository(Usuario)
+        private readonly usuariosRepository: Repository<Usuario>,
+        private readonly jwtService: JwtService,
+    
+        
+    ) { }
+    async login(loginUsuario: LoginUsuarioDto): Promise<{ usuario: Partial<Usuario>, token: string }> {
+        const usuario = await this.usuariosRepository.findOne({ 
+            where: {email: loginUsuario.email},
+        });
+        console.log('Usuario encontrado:', usuario);
 
-    async login(credentials: LoginUsuarioDto): Promise<string>{
-        try{
-        const usuario = await this.usuariosService.encontrarPorEmail(credentials.email);
-        if(usuario && usuario.contrasenia === credentials.contrasenia){
-            return "Has inciado sesión correctamente"
+        if (!usuario) {
+            throw new HttpException('Email o contraseña incorrecto', HttpStatus.UNAUTHORIZED);
         }
-        throw new UnauthorizedException ("Email o contraseña incorrectos. Por favor intenta nuevamente")
-    }catch(error){
-        throw new InternalServerErrorException ("Error al iniciar sesión. Por favor intenta nuevamente", error);
+
+        // Verificar si el usuario está habilitado
+        if (!usuario.estado) {
+            throw new ForbiddenException('Tu cuenta está suspendida. Contacta al administrador.');
+        }
+
+        const contraseniaCoincide = usuario && await bcrypt.compare(loginUsuario.contrasenia, usuario.contrasenia);
+
+        console.log('Contraseña recibida en el login:', loginUsuario.contrasenia);
+        console.log('Contraseña coincide:', contraseniaCoincide);
+
+        if (!contraseniaCoincide) {
+            throw new HttpException('Email o contraseña incorrecto', HttpStatus.UNAUTHORIZED);
+        }
+
+        const token = await this.createToken(usuario);
+        const { ...usuarioSinContrasenia} = usuario;
+
+        return {
+            usuario: usuarioSinContrasenia,
+            token,
+        };
+
     }
-}
+
+    private async createToken(usuario: Usuario) {
+        const payload = {
+            id: usuario.id,
+            email: usuario.email,
+            nombre: usuario.nombre,
+            rol: usuario.rol
+        };
+        return this.jwtService.signAsync(payload)
+    }
 }

@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import {  IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 
 export class CrearUsuarioDto {
@@ -24,8 +24,7 @@ export class CrearUsuarioDto {
     @IsString()
     contrasenia: string;
 
-    @IsBoolean()
-    esAdmin?: boolean
+    
 }
 
 
