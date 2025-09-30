@@ -19,6 +19,9 @@ export class Usuario{
     @Column({default: false})
     esAdmin: boolean;
 
+    @Column({default: true})
+    estado: boolean;
+
     @OneToMany(()=> Tarea, (tarea) => tarea.usuario_creador,)
     tarea_creada:Tarea[];
 

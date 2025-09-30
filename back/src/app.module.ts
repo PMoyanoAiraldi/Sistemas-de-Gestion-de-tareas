@@ -8,6 +8,7 @@ import { UsuariosModule } from './usuario/usuario.module';
 import { CategoriasModule } from './categoria/categoria.module';
 import { TareasModule } from './tarea/tarea.module';
 import { DataSourceOptions } from 'typeorm';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -24,7 +25,8 @@ import { DataSourceOptions } from 'typeorm';
     }),
     UsuariosModule,
     CategoriasModule,
-    TareasModule
+    TareasModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],
