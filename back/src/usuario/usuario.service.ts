@@ -81,7 +81,7 @@ async crearUsuario(crearUsuario: CrearUsuarioDto): Promise <Usuario>{
             nombre: modificarUsuario.nombre || usuario.nombre,  
             email: modificarUsuario.email || usuario.email,      
             contrasenia: modificarUsuario.contrasenia || usuario.contrasenia, 
-            esAdmin: modificarUsuario.esAdmin || usuario.esAdmin,   
+            rol: modificarUsuario.rol || usuario.rol,   
             estado: modificarUsuario.estado || usuario.estado
     };
         

@@ -1,6 +1,11 @@
 import { Tarea } from "src/tarea/tarea.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
+export enum rolEnum {
+    ADMIN = 'admin',
+    USUARIO = 'usuario',
+}
+
 @Entity()
 export class Usuario{
 
@@ -16,8 +21,12 @@ export class Usuario{
     @Column({ nullable: false})
     contrasenia: string;
 
-    @Column({default: false})
-    esAdmin: boolean;
+    @Column({
+        type: 'enum',
+        enum: rolEnum,
+        default: rolEnum.USUARIO,
+    })
+    rol: rolEnum;
 
     @Column({default: true})
     estado: boolean;

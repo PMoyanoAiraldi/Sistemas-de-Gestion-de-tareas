@@ -1,4 +1,5 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { rolEnum } from "../usuario.entity";
 
 
 export class ModificarUsuarioDto{
@@ -26,9 +27,9 @@ export class ModificarUsuarioDto{
     @IsOptional()
     contrasenia?: string;
 
-    @IsBoolean()
     @IsOptional()
-    esAdmin?: boolean
+    @IsEnum(rolEnum)
+    rol: rolEnum;
 
     @IsBoolean()
     @IsOptional()

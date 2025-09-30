@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsEnum, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { rolEnum } from "../usuario.entity";
 
 export class RespuestaUsuarioDto {
 
@@ -11,6 +12,9 @@ export class RespuestaUsuarioDto {
     
     @IsEmail()
     email: string;
+
+    @IsEnum(rolEnum)
+    rol: rolEnum;
 
 }
 
