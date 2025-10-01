@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Post, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, InternalServerErrorException, NotFoundException, Param, Post, Put, Req, UnauthorizedException, UseGuards } from "@nestjs/common";
 import { TareasService } from "./tarea.service";
 import { CrearTareaDto } from "./dto/crear-tareas.dto";
 import { RespuestaTareaDto } from "./dto/respuesta-tarea.dto";
@@ -7,6 +7,17 @@ import { Tarea } from "./tarea.entity";
 import { AuthGuard } from "src/guard/auth.guard";
 import { Roles } from "../decorators/roles.decorator";
 import { RolesGuard } from "src/guard/roles.guard";
+
+interface RequestWithUser extends Request {
+    user: {
+        id: string;
+        nombre:string;
+        email: string;
+        rol: string;
+    };
+}
+
+
 
 @Controller("tareas")
 export class TareasController {
@@ -38,17 +49,29 @@ export class TareasController {
     }
 
     @Get(':id')
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles('admin')
     @HttpCode(HttpStatus.OK)
     async obtenerTarea(@Param('id') id: string): Promise<Tarea> {
         return this.tareasService.obtenerTareaPorId(id);
     }
 
     @Get()
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles('admin', 'usuario')
     @HttpCode(HttpStatus.OK)
-    async obtenerTareas(): Promise<RespuestaTareaDto[]> {
-    return this.tareasService.obtenerTareas();
+    async obtenerTareas(@Req() req: RequestWithUser): Promise<Tarea[]> {
+    const usuario = req.user; // Usuario del token JWT
+    
+    if (!usuario || !usuario.id) {
+        throw new UnauthorizedException('Usuario no autenticado');
+    }
+    
+    // Si es admin, devuelve todas las tareas
+    if (usuario.rol === 'admin') {
+        return this.tareasService.obtenerTareas();
+    }
+    
+    // Si es usuario común, solo sus tareas
+    return this.tareasService.obtenerTareasPorUsuario(usuario.id);
 
     }
     

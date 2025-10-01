@@ -63,9 +63,18 @@ export class TareasService {
     }
 
     async obtenerTareas(): Promise<Tarea[]> {
-        return await this.tareasRepository.find();
+        return await this.tareasRepository.find({
+        relations: ["usuario_creador", "usuario_asignado", "categoria"],
+    });
     }
-
+async obtenerTareasPorUsuario(usuarioId: string): Promise<Tarea[]> {
+    return await this.tareasRepository.find({
+        where: { 
+            usuario_asignado: { id: usuarioId } 
+        },
+        relations: ["usuario_creador", "usuario_asignado", "categoria"],
+    });
+}
 
     async obtenerTareaPorId(id: string): Promise<Tarea> {
         const tarea = await this.tareasRepository.findOne({ where: { id } });
@@ -79,7 +88,7 @@ export class TareasService {
     async modificarTarea(id: string, modificartTareaDto: ModificarTareaDto): Promise<RespuestaTareaDto> {
         
         const tareaExistente = await this.tareasRepository.findOne({ where: { id }, 
-            relations: ['usuario_creador',' usuario_asignado', 'categoria'] });
+            relations: ['usuario_creador','usuario_asignado', 'categoria'] });
         if (!tareaExistente) {
             throw new NotFoundException('Tarea no encontrada');
         }
